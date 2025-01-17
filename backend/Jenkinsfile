@@ -1,18 +1,17 @@
 pipeline {
     agent any
 
+     tools {
+        // Use the configured Node.js version
+        nodejs 'nodejs_16'
+    }
+
     environment {
         DOCKER_IMAGE = 'blog-app'
         DOCKER_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
                 sh 'npm install'
