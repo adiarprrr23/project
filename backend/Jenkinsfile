@@ -1,50 +1,87 @@
 pipeline {
     agent any
 
-     tools {
+    tools {
         // Use the configured Node.js version
         nodejs 'nodejs_16'
     }
 
-    environment {
-        DOCKER_IMAGE = 'blog-app'
-        DOCKER_TAG = "${BUILD_NUMBER}"
-    }
-
     stages {
+        stage('Setup') {
+            steps {
+                script {
+                    // Verify Node and NPM versions
+                    sh 'node -v'
+                    sh 'npm -v'
+                }
+            }
+        }
+        
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh 'npm test'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
                 script {
-                    docker.build("${DOCKER_IMAGE}:${DOCKER_TAG}")
+                    // Change directory to backend and install dependencies using npm ci
+                    dir('backend') {
+                        sh 'npm ci'
+                    }
                 }
             }
         }
 
-        stage('Deploy') {
+        // Uncomment if build step is needed
+        // stage('Build') {
+        //     steps {
+        //         script {
+        //             // Build the project
+        //             sh 'npm run build'
+        //         }
+        //     }
+        // }
+
+        stage('Test') {
             steps {
                 script {
-                    // Add your deployment steps here
-                    echo 'Deploying application...'
+                    // Run tests from the backend directory
+                    dir('backend') {
+                        sh 'npm test'
+                    }
                 }
             }
         }
-    }
+        
+        stage('Docker') {
+            steps {
+                script {
+                    dir('backend') {
+                        // Define the Docker image name and tag
+                        def imageName = "workingblog"
+                        def imageTag = "latest"
 
-    post {
-        always {
-            cleanWs()
+                        // Build the Docker image
+                        sh "docker build -t suarim/${imageName}:${imageTag} ."
+                        sh "echo docker build success"
+
+                        // Log in to Docker Hub or another registry
+                        withCredentials([string(credentialsId: 'DOCKER_HUB_PASSWORD', variable: 'DOCKER_HUB_PASSWORD')]) {
+                            sh "echo ${DOCKER_HUB_PASSWORD} | docker login -u suarim --password-stdin"
+                        }
+
+                        // Push the Docker image to the repository
+                        sh "docker push suarim/${imageName}:${imageTag}"
+                    }
+                }
+            }
+        }
+
+        stage('Container') {
+            steps {
+                script {
+                    dir('backend') {
+                        // Run the Docker container
+                        sh 'docker run -d -p 4000:4000 suarim/workingblog:latest'
+                    }
+                }
+            }
         }
     }
 }
