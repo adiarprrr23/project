@@ -1,10 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
 import Navbar from './components/Navbar';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import BlogList from './components/BlogList';
 import BlogCreate from './components/BlogCreate';
 import BlogEdit from './components/BlogEdit';
+import BlogDetail from './components/BlogDetail';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -20,6 +22,7 @@ function App() {
               <Route path="/blogs" element={<BlogList />} />
               <Route path="/blogs/create" element={<BlogCreate />} />
               <Route path="/blogs/edit/:id" element={<BlogEdit />} />
+              <Route path="/blogs/:id" element={<BlogDetail />} />
               <Route path="/" element={<Navigate to="/login" />} />
             </Routes>
           </main>
@@ -29,4 +32,4 @@ function App() {
   );
 }
 
-export default App;
+export default App

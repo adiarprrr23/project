@@ -9,6 +9,8 @@ function BlogCreate() {
   const [topicId, setTopicId] = useState('');
   const [newTopic, setNewTopic] = useState('');
   const [topics, setTopics] = useState([]);
+  const [thumbnail, setThumbnail] = useState(null);
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -40,10 +42,20 @@ function BlogCreate() {
         selectedTopicId = topicResponse.data._id;
       }
 
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('content', content);
+      formData.append('topicId', selectedTopicId);
+      if (thumbnail) {
+        formData.append('thumbnail', thumbnail);
+      } else if (thumbnailUrl) {
+        formData.append('thumbnail', thumbnailUrl);
+      }
+
       await axios.post(
         'http://localhost:5000/api/blogs',
-        { title, content, topicId: selectedTopicId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
       );
       
       navigate('/blogs');
@@ -128,6 +140,27 @@ function BlogCreate() {
                 disabled={topicId}
               />
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-2">
+              Thumbnail Image
+            </label>
+            <input
+              id="thumbnail"
+              type="file"
+              onChange={(e) => setThumbnail(e.target.files[0])}
+              className="input"
+            />
+            <p className="text-sm text-gray-500 mt-2">Or</p>
+            <input
+              id="thumbnailUrl"
+              type="text"
+              value={thumbnailUrl}
+              onChange={(e) => setThumbnailUrl(e.target.value)}
+              className="input mt-2"
+              placeholder="Enter image URL"
+            />
           </div>
 
           <div className="flex justify-end gap-4 pt-6">
